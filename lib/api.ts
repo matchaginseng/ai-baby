@@ -41,6 +41,7 @@ export const questionnaireAPI = {
 // Babies endpoints
 export const babiesAPI = {
   getAll: () => api.get('/babies'),
+  getMyBabies: () => api.get('/babies/my-babies'),
   toggleVisibility: (is_visible: boolean) =>
     api.post('/babies/visibility', { is_visible }),
   select: (baby_id: number) => api.post('/babies/selected', { baby_id }),

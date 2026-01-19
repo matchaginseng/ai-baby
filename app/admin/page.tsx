@@ -49,6 +49,9 @@ export default function AdminPage() {
     try {
       const response = await babiesAPI.getAll()
       setBabies(response.data)
+      // Initialize showBabies state from backend data
+      const anyVisible = response.data.some((baby: any) => baby.is_visible)
+      setShowBabies(anyVisible)
     } catch (err) {
       console.error('Failed to load babies:', err)
     }

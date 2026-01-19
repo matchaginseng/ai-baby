@@ -19,6 +19,7 @@ export default function QuestionnairePage() {
   const [hasSelectedBaby, setHasSelectedBaby] = useState(false)
   const [isLocked, setIsLocked] = useState(false)
   const [viewingImage, setViewingImage] = useState<string | null>(null)
+  const [babiesVisible, setBabiesVisible] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -59,6 +60,11 @@ export default function QuestionnairePage() {
     try {
       const response = await settingsAPI.get()
       setIsLocked(response.data.questionnaires_locked || false)
+
+      // Check if babies are visible
+      const allBabiesResponse = await babiesAPI.getAll()
+      const anyVisible = allBabiesResponse.data.some((baby: any) => baby.is_visible)
+      setBabiesVisible(anyVisible)
     } catch (err) {
       console.error('Failed to load settings:', err)
     }
@@ -142,6 +148,23 @@ export default function QuestionnairePage() {
               </button>
             </div>
           </div>
+
+          {/* Navigation Tabs */}
+          {babiesVisible && (
+            <div className="flex gap-2 mb-6 border-b border-gray-200">
+              <button
+                className="px-6 py-3 text-purple-600 border-b-2 border-purple-600 font-semibold"
+              >
+                Questionnaire
+              </button>
+              <button
+                onClick={() => router.push('/my-babies')}
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 hover:border-b-2 hover:border-purple-500 transition"
+              >
+                My Babies
+              </button>
+            </div>
+          )}
 
           {isLocked && (
             <div className="mb-6 p-4 bg-orange-100 border border-orange-400 text-orange-800 rounded-lg">

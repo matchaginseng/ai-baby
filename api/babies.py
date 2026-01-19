@@ -122,6 +122,41 @@ def get_selected_baby():
             }
         }), 200
 
+@babies_bp.route('/babies/my-babies', methods=['GET'])
+@jwt_required()
+def get_my_babies():
+    """Get babies associated with the current user (selected baby + babies with chat history)"""
+    email = get_jwt_identity()
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, selected_baby_id FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Get babies the user has interacted with (through chat sessions or selected baby)
+        cursor.execute('''
+            SELECT DISTINCT b.id, b.name, b.age, b.attributes, b.image_path, b.life_stages
+            FROM babies b
+            LEFT JOIN chat_sessions cs ON b.id = cs.baby_id AND cs.user_id = %s
+            WHERE b.is_visible = TRUE
+            AND (cs.baby_id IS NOT NULL OR b.id = %s)
+            ORDER BY b.id
+        ''', (user['id'], user['selected_baby_id']))
+
+        babies = cursor.fetchall()
+
+        return jsonify([{
+            'id': b['id'],
+            'name': b['name'],
+            'age': b['age'],
+            'attributes': b['attributes'],
+            'image_path': b['image_path'],
+            'life_stages': b.get('life_stages', [])
+        } for b in babies]), 200
+
 @babies_bp.route('/babies', methods=['POST'])
 @jwt_required()
 def create_baby():
