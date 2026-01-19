@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
-import { questionnaireAPI, babiesAPI } from '@/lib/api'
+import { questionnaireAPI, babiesAPI, settingsAPI } from '@/lib/api'
+import ImageModal from '../components/ImageModal'
 
 export default function AdminPage() {
   const user = useAuthStore((state) => state.user)
@@ -13,7 +14,9 @@ export default function AdminPage() {
   const [questionnaires, setQuestionnaires] = useState<any[]>([])
   const [babies, setBabies] = useState<any[]>([])
   const [showBabies, setShowBabies] = useState(false)
+  const [questionnairesLocked, setQuestionnairesLocked] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [viewingImage, setViewingImage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -28,6 +31,7 @@ export default function AdminPage() {
 
     loadQuestionnaires()
     loadBabies()
+    loadSettings()
   }, [user, router])
 
   const loadQuestionnaires = async () => {
@@ -50,6 +54,15 @@ export default function AdminPage() {
     }
   }
 
+  const loadSettings = async () => {
+    try {
+      const response = await settingsAPI.get()
+      setQuestionnairesLocked(response.data.questionnaires_locked || false)
+    } catch (err) {
+      console.error('Failed to load settings:', err)
+    }
+  }
+
   const handleToggleBabies = async () => {
     const newVisibility = !showBabies
     try {
@@ -58,6 +71,17 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Failed to toggle babies:', err)
       alert('Failed to update baby visibility')
+    }
+  }
+
+  const handleToggleQuestionnairesLock = async () => {
+    const newLockStatus = !questionnairesLocked
+    try {
+      await settingsAPI.toggleQuestionnairesLock(newLockStatus)
+      setQuestionnairesLocked(newLockStatus)
+    } catch (err) {
+      console.error('Failed to toggle questionnaires lock:', err)
+      alert('Failed to update questionnaires lock status')
     }
   }
 
@@ -108,6 +132,32 @@ export default function AdminPage() {
             </div>
           </div>
 
+          {/* Lock Questionnaires Toggle */}
+          <div className="mb-8 p-6 bg-orange-50 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                  Questionnaire Editing Lock
+                </h2>
+                <p className="text-gray-600 text-sm">
+                  Toggle to lock/unlock questionnaire editing for all users
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={questionnairesLocked}
+                  onChange={handleToggleQuestionnairesLock}
+                  className="sr-only peer"
+                />
+                <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-orange-600"></div>
+                <span className="ml-3 text-sm font-medium text-gray-900">
+                  {questionnairesLocked ? 'Locked' : 'Unlocked'}
+                </span>
+              </label>
+            </div>
+          </div>
+
           {/* Babies List */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">
@@ -127,7 +177,10 @@ export default function AdminPage() {
                   >
                     {/* Baby Image */}
                     {baby.image_path && (
-                      <div className="mb-4 rounded-lg overflow-hidden aspect-square bg-gray-100">
+                      <div
+                        className="mb-4 rounded-lg overflow-hidden aspect-square bg-gray-100 cursor-pointer hover:opacity-90 transition"
+                        onClick={() => setViewingImage(baby.image_path)}
+                      >
                         <img
                           src={baby.image_path}
                           alt={baby.name}
@@ -242,7 +295,8 @@ export default function AdminPage() {
                           {q.image_paths.map((img: string, idx: number) => (
                             <div
                               key={idx}
-                              className="aspect-square rounded-lg overflow-hidden border border-gray-200"
+                              className="aspect-square rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-purple-500 transition"
+                              onClick={() => setViewingImage(`/api/uploads/${img}`)}
                             >
                               <img
                                 src={`/api/uploads/${img}`}
@@ -261,6 +315,15 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {viewingImage && (
+        <ImageModal
+          imageUrl={viewingImage}
+          altText="Image"
+          onClose={() => setViewingImage(null)}
+        />
+      )}
     </div>
   )
 }

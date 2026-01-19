@@ -51,6 +51,13 @@ export const babiesAPI = {
 // Chat endpoints
 export const chatAPI = {
   getHistory: (babyId: number) => api.get(`/chat/${babyId}`),
-  sendMessage: (babyId: number, message: string) =>
-    api.post(`/chat/${babyId}`, { message }),
+  sendMessage: (babyId: number, message: string, stage?: any) =>
+    api.post(`/chat/${babyId}`, { message, stage }),
+}
+
+// Settings endpoints
+export const settingsAPI = {
+  get: () => api.get('/settings'),
+  toggleQuestionnairesLock: (is_locked: boolean) =>
+    api.post('/settings/questionnaires-lock', { is_locked }),
 }
