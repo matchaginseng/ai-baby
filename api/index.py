@@ -7,6 +7,7 @@ from api.auth import auth_bp
 from api.questionnaire import questionnaire_bp
 from api.babies import babies_bp
 from api.chat import chat_bp
+from api.settings import settings_bp
 import os
 
 app = Flask(__name__)
@@ -23,6 +24,7 @@ app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(questionnaire_bp, url_prefix='/api')
 app.register_blueprint(babies_bp, url_prefix='/api')
 app.register_blueprint(chat_bp, url_prefix='/api')
+app.register_blueprint(settings_bp, url_prefix='/api')
 
 # Serve uploaded files
 @app.route('/api/uploads/<path:filename>')

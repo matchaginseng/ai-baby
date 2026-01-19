@@ -54,3 +54,10 @@ export const chatAPI = {
   sendMessage: (babyId: number, message: string) =>
     api.post(`/chat/${babyId}`, { message }),
 }
+
+// Settings endpoints
+export const settingsAPI = {
+  get: () => api.get('/settings'),
+  toggleQuestionnairesLock: (is_locked: boolean) =>
+    api.post('/settings/questionnaires-lock', { is_locked }),
+}

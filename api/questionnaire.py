@@ -51,6 +51,13 @@ def save_questionnaire():
 
     with get_db() as conn:
         cursor = conn.cursor()
+
+        # Check if questionnaires are locked
+        cursor.execute("SELECT value FROM settings WHERE key = 'questionnaires_locked'")
+        setting = cursor.fetchone()
+        if setting and setting['value']:
+            return jsonify({'error': 'Questionnaires are currently locked by admin'}), 403
+
         cursor.execute('SELECT id FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
 
@@ -95,6 +102,13 @@ def upload_image():
 
     with get_db() as conn:
         cursor = conn.cursor()
+
+        # Check if questionnaires are locked
+        cursor.execute("SELECT value FROM settings WHERE key = 'questionnaires_locked'")
+        setting = cursor.fetchone()
+        if setting and setting['value']:
+            return jsonify({'error': 'Questionnaires are currently locked by admin'}), 403
+
         cursor.execute('SELECT id FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
 

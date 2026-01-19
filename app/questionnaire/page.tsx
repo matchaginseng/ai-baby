@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
-import { questionnaireAPI, babiesAPI } from '@/lib/api'
+import { questionnaireAPI, babiesAPI, settingsAPI } from '@/lib/api'
 
 export default function QuestionnairePage() {
   const user = useAuthStore((state) => state.user)
@@ -16,6 +16,7 @@ export default function QuestionnairePage() {
   const [saving, setSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [hasSelectedBaby, setHasSelectedBaby] = useState(false)
+  const [isLocked, setIsLocked] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -30,6 +31,7 @@ export default function QuestionnairePage() {
 
     loadQuestionnaire()
     checkSelectedBaby()
+    loadSettings()
   }, [user, router])
 
   const checkSelectedBaby = async () => {
@@ -51,6 +53,15 @@ export default function QuestionnairePage() {
     }
   }
 
+  const loadSettings = async () => {
+    try {
+      const response = await settingsAPI.get()
+      setIsLocked(response.data.questionnaires_locked || false)
+    } catch (err) {
+      console.error('Failed to load settings:', err)
+    }
+  }
+
   const saveAnswers = async (newAnswers: any) => {
     setSaving(true)
     try {
@@ -64,6 +75,7 @@ export default function QuestionnairePage() {
   }
 
   const handleInputChange = (field: string, value: any) => {
+    if (isLocked) return
     const newAnswers = { ...answers, [field]: value }
     setAnswers(newAnswers)
     // Auto-save with debounce
@@ -71,6 +83,7 @@ export default function QuestionnairePage() {
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isLocked) return
     const files = e.target.files
     if (!files) return
 
@@ -128,6 +141,12 @@ export default function QuestionnairePage() {
             </div>
           </div>
 
+          {isLocked && (
+            <div className="mb-6 p-4 bg-orange-100 border border-orange-400 text-orange-800 rounded-lg">
+              <strong>Questionnaire Locked:</strong> The admin has locked questionnaire editing. You can view your answers but cannot make changes at this time.
+            </div>
+          )}
+
           {saving && (
             <div className="mb-4 text-sm text-blue-600">Saving...</div>
           )}
@@ -155,7 +174,8 @@ export default function QuestionnairePage() {
                         onChange={(e) =>
                           handleInputChange('parenting_style', e.target.value)
                         }
-                        className="w-4 h-4 text-blue-600"
+                        disabled={isLocked}
+                        className="w-4 h-4 text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className="text-gray-700">{option}</span>
                     </label>
@@ -180,7 +200,8 @@ export default function QuestionnairePage() {
                         onChange={(e) =>
                           handleInputChange('energy_level', e.target.value)
                         }
-                        className="w-4 h-4 text-blue-600"
+                        disabled={isLocked}
+                        className="w-4 h-4 text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                       />
                       <span className="text-gray-700">{option}</span>
                     </label>
@@ -213,7 +234,8 @@ export default function QuestionnairePage() {
                           : traits.filter((t: string) => t !== option)
                         handleInputChange('traits', newTraits)
                       }}
-                      className="w-4 h-4 text-blue-600"
+                      disabled={isLocked}
+                      className="w-4 h-4 text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     <span className="text-gray-700">{option}</span>
                   </label>
@@ -229,7 +251,8 @@ export default function QuestionnairePage() {
               <textarea
                 value={answers.hobbies || ''}
                 onChange={(e) => handleInputChange('hobbies', e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLocked}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 rows={4}
                 placeholder="Tell us about your hobbies..."
               />
@@ -244,7 +267,8 @@ export default function QuestionnairePage() {
                 onChange={(e) =>
                   handleInputChange('ideal_weekend', e.target.value)
                 }
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                disabled={isLocked}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 rows={4}
                 placeholder="Describe your perfect weekend..."
               />
@@ -260,7 +284,8 @@ export default function QuestionnairePage() {
                 accept="image/*"
                 multiple
                 onChange={handleImageUpload}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                disabled={isLocked}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
               />
 
               {uploadedImages.length > 0 && (

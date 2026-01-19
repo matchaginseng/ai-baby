@@ -85,5 +85,21 @@ def init_db():
             )
         ''')
 
+        # Settings table for global app settings
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS settings (
+                id SERIAL PRIMARY KEY,
+                key VARCHAR(255) UNIQUE NOT NULL,
+                value BOOLEAN DEFAULT FALSE
+            )
+        ''')
+
+        # Initialize default settings
+        cursor.execute('''
+            INSERT INTO settings (key, value)
+            VALUES ('questionnaires_locked', FALSE)
+            ON CONFLICT (key) DO NOTHING
+        ''')
+
         conn.commit()
         print("Database tables created successfully!")
