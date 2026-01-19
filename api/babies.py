@@ -1,0 +1,152 @@
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from api.database import get_db
+
+babies_bp = Blueprint('babies', __name__)
+
+@babies_bp.route('/babies', methods=['GET'])
+@jwt_required()
+def get_babies():
+    email = get_jwt_identity()
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, role FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Get babies (only visible ones for regular users)
+        if user['role'] == 'admin':
+            cursor.execute('SELECT id, name, age, attributes, image_path, is_visible FROM babies ORDER BY id')
+        else:
+            cursor.execute('SELECT id, name, age, attributes, image_path FROM babies WHERE is_visible = TRUE ORDER BY id')
+
+        babies = cursor.fetchall()
+
+        return jsonify([{
+            'id': b['id'],
+            'name': b['name'],
+            'age': b['age'],
+            'attributes': b['attributes'],
+            'image_path': b['image_path'],
+            'is_visible': b.get('is_visible', True)
+        } for b in babies]), 200
+
+@babies_bp.route('/babies/visibility', methods=['POST'])
+@jwt_required()
+def toggle_baby_visibility():
+    email = get_jwt_identity()
+    data = request.json
+    is_visible = data.get('is_visible', False)
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT role FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+
+        if not user or user['role'] != 'admin':
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        # Update all babies visibility
+        cursor.execute('UPDATE babies SET is_visible = %s', (is_visible,))
+
+        return jsonify({'message': 'Baby visibility updated', 'is_visible': is_visible}), 200
+
+@babies_bp.route('/babies/selected', methods=['POST'])
+@jwt_required()
+def select_baby():
+    email = get_jwt_identity()
+    data = request.json
+    baby_id = data.get('baby_id')
+
+    if not baby_id:
+        return jsonify({'error': 'Baby ID required'}), 400
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Verify baby exists
+        cursor.execute('SELECT id FROM babies WHERE id = %s', (baby_id,))
+        if not cursor.fetchone():
+            return jsonify({'error': 'Baby not found'}), 404
+
+        # Update user's selected baby
+        cursor.execute(
+            'UPDATE users SET selected_baby_id = %s WHERE id = %s',
+            (baby_id, user['id'])
+        )
+
+        return jsonify({'message': 'Baby selected successfully', 'baby_id': baby_id}), 200
+
+@babies_bp.route('/babies/selected', methods=['GET'])
+@jwt_required()
+def get_selected_baby():
+    email = get_jwt_identity()
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT selected_baby_id FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        if not user['selected_baby_id']:
+            return jsonify({'selected_baby': None}), 200
+
+        cursor.execute(
+            'SELECT id, name, age, attributes, image_path FROM babies WHERE id = %s',
+            (user['selected_baby_id'],)
+        )
+        baby = cursor.fetchone()
+
+        if not baby:
+            return jsonify({'selected_baby': None}), 200
+
+        return jsonify({
+            'selected_baby': {
+                'id': baby['id'],
+                'name': baby['name'],
+                'age': baby['age'],
+                'attributes': baby['attributes'],
+                'image_path': baby['image_path']
+            }
+        }), 200
+
+@babies_bp.route('/babies', methods=['POST'])
+@jwt_required()
+def create_baby():
+    """Admin only: Create a new baby"""
+    email = get_jwt_identity()
+    data = request.json
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT role FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+
+        if not user or user['role'] != 'admin':
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        name = data.get('name')
+        age = data.get('age')
+        attributes = data.get('attributes', [])
+        image_path = data.get('image_path', '')
+
+        if not name or not age:
+            return jsonify({'error': 'Name and age required'}), 400
+
+        cursor.execute(
+            'INSERT INTO babies (name, age, attributes, image_path, is_visible) VALUES (%s, %s, %s, %s, %s) RETURNING id',
+            (name, age, attributes, image_path, False)
+        )
+        baby_id = cursor.fetchone()['id']
+
+        return jsonify({'message': 'Baby created', 'id': baby_id}), 201

@@ -1,0 +1,288 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/lib/store'
+import { questionnaireAPI, babiesAPI } from '@/lib/api'
+
+export default function QuestionnairePage() {
+  const user = useAuthStore((state) => state.user)
+  const logout = useAuthStore((state) => state.logout)
+  const router = useRouter()
+
+  const [answers, setAnswers] = useState<any>({})
+  const [images, setImages] = useState<File[]>([])
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [saving, setSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [hasSelectedBaby, setHasSelectedBaby] = useState(false)
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login')
+      return
+    }
+
+    if (user.role === 'admin') {
+      router.push('/admin')
+      return
+    }
+
+    loadQuestionnaire()
+    checkSelectedBaby()
+  }, [user, router])
+
+  const checkSelectedBaby = async () => {
+    try {
+      const response = await babiesAPI.getSelected()
+      setHasSelectedBaby(!!response.data.selected_baby)
+    } catch (err) {
+      console.error('Failed to check selected baby:', err)
+    }
+  }
+
+  const loadQuestionnaire = async () => {
+    try {
+      const response = await questionnaireAPI.get()
+      setAnswers(response.data.answers || {})
+      setUploadedImages(response.data.image_paths || [])
+    } catch (err) {
+      console.error('Failed to load questionnaire:', err)
+    }
+  }
+
+  const saveAnswers = async (newAnswers: any) => {
+    setSaving(true)
+    try {
+      await questionnaireAPI.save(newAnswers)
+      setLastSaved(new Date())
+    } catch (err) {
+      console.error('Failed to save:', err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleInputChange = (field: string, value: any) => {
+    const newAnswers = { ...answers, [field]: value }
+    setAnswers(newAnswers)
+    // Auto-save with debounce
+    setTimeout(() => saveAnswers(newAnswers), 1000)
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files) return
+
+    for (let file of Array.from(files)) {
+      if (file.size > 1024 * 1024) {
+        alert('File too large (max 1MB)')
+        continue
+      }
+
+      const formData = new FormData()
+      formData.append('image', file)
+
+      try {
+        const response = await questionnaireAPI.upload(formData)
+        setUploadedImages((prev) => [...prev, response.data.filename])
+      } catch (err) {
+        console.error('Upload failed:', err)
+        alert('Failed to upload image')
+      }
+    }
+  }
+
+  const handleLogout = () => {
+    logout()
+    router.push('/login')
+  }
+
+  const goToBabies = () => {
+    router.push('/babies')
+  }
+
+  if (!user) return null
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800">Questionnaire</h1>
+            <div className="flex gap-4">
+              {hasSelectedBaby && (
+                <button
+                  onClick={goToBabies}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                >
+                  View Babies
+                </button>
+              )}
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+
+          {saving && (
+            <div className="mb-4 text-sm text-blue-600">Saving...</div>
+          )}
+          {lastSaved && !saving && (
+            <div className="mb-4 text-sm text-green-600">
+              Last saved: {lastSaved.toLocaleTimeString()}
+            </div>
+          )}
+
+          <div className="space-y-8">
+            {/* Multiple Choice Questions */}
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-3">
+                What is your preferred parenting style?
+              </label>
+              <div className="space-y-2">
+                {['Gentle', 'Structured', 'Playful', 'Educational'].map(
+                  (option) => (
+                    <label key={option} className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        name="parenting_style"
+                        value={option}
+                        checked={answers.parenting_style === option}
+                        onChange={(e) =>
+                          handleInputChange('parenting_style', e.target.value)
+                        }
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-gray-700">{option}</span>
+                    </label>
+                  )
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-3">
+                What energy level do you prefer?
+              </label>
+              <div className="space-y-2">
+                {['High Energy', 'Moderate', 'Calm', 'Very Calm'].map(
+                  (option) => (
+                    <label key={option} className="flex items-center space-x-3">
+                      <input
+                        type="radio"
+                        name="energy_level"
+                        value={option}
+                        checked={answers.energy_level === option}
+                        onChange={(e) =>
+                          handleInputChange('energy_level', e.target.value)
+                        }
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-gray-700">{option}</span>
+                    </label>
+                  )
+                )}
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-3">
+                What personality traits are most important to you?
+              </label>
+              <div className="space-y-2">
+                {[
+                  'Smart & Curious',
+                  'Funny & Outgoing',
+                  'Kind & Empathetic',
+                  'Creative & Artistic',
+                  'Athletic & Active',
+                ].map((option) => (
+                  <label key={option} className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      value={option}
+                      checked={(answers.traits || []).includes(option)}
+                      onChange={(e) => {
+                        const traits = answers.traits || []
+                        const newTraits = e.target.checked
+                          ? [...traits, option]
+                          : traits.filter((t: string) => t !== option)
+                        handleInputChange('traits', newTraits)
+                      }}
+                      className="w-4 h-4 text-blue-600"
+                    />
+                    <span className="text-gray-700">{option}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Text Inputs */}
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-3">
+                What are your hobbies and interests?
+              </label>
+              <textarea
+                value={answers.hobbies || ''}
+                onChange={(e) => handleInputChange('hobbies', e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={4}
+                placeholder="Tell us about your hobbies..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-3">
+                Describe your ideal weekend
+              </label>
+              <textarea
+                value={answers.ideal_weekend || ''}
+                onChange={(e) =>
+                  handleInputChange('ideal_weekend', e.target.value)
+                }
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={4}
+                placeholder="Describe your perfect weekend..."
+              />
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-3">
+                Upload your photos (max 1MB each)
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+
+              {uploadedImages.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {uploadedImages.map((img, idx) => (
+                    <div
+                      key={idx}
+                      className="aspect-square rounded-lg overflow-hidden border border-gray-200"
+                    >
+                      <img
+                        src={`/api/uploads/${img}`}
+                        alt={`Upload ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
