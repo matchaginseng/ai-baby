@@ -19,9 +19,9 @@ def get_babies():
 
         # Get babies (only visible ones for regular users)
         if user['role'] == 'admin':
-            cursor.execute('SELECT id, name, age, attributes, image_path, is_visible FROM babies ORDER BY id')
+            cursor.execute('SELECT id, name, age, attributes, image_path, is_visible, life_stages FROM babies ORDER BY id')
         else:
-            cursor.execute('SELECT id, name, age, attributes, image_path FROM babies WHERE is_visible = TRUE ORDER BY id')
+            cursor.execute('SELECT id, name, age, attributes, image_path, life_stages FROM babies WHERE is_visible = TRUE ORDER BY id')
 
         babies = cursor.fetchall()
 
@@ -31,7 +31,8 @@ def get_babies():
             'age': b['age'],
             'attributes': b['attributes'],
             'image_path': b['image_path'],
-            'is_visible': b.get('is_visible', True)
+            'is_visible': b.get('is_visible', True),
+            'life_stages': b.get('life_stages', [])
         } for b in babies]), 200
 
 @babies_bp.route('/babies/visibility', methods=['POST'])
@@ -102,7 +103,7 @@ def get_selected_baby():
             return jsonify({'selected_baby': None}), 200
 
         cursor.execute(
-            'SELECT id, name, age, attributes, image_path FROM babies WHERE id = %s',
+            'SELECT id, name, age, attributes, image_path, life_stages FROM babies WHERE id = %s',
             (user['selected_baby_id'],)
         )
         baby = cursor.fetchone()
@@ -116,7 +117,8 @@ def get_selected_baby():
                 'name': baby['name'],
                 'age': baby['age'],
                 'attributes': baby['attributes'],
-                'image_path': baby['image_path']
+                'image_path': baby['image_path'],
+                'life_stages': baby.get('life_stages', [])
             }
         }), 200
 

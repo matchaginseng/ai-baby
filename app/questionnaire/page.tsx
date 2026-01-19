@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 import { questionnaireAPI, babiesAPI, settingsAPI } from '@/lib/api'
+import ImageModal from '../components/ImageModal'
 
 export default function QuestionnairePage() {
   const user = useAuthStore((state) => state.user)
@@ -17,6 +18,7 @@ export default function QuestionnairePage() {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [hasSelectedBaby, setHasSelectedBaby] = useState(false)
   const [isLocked, setIsLocked] = useState(false)
+  const [viewingImage, setViewingImage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -293,7 +295,8 @@ export default function QuestionnairePage() {
                   {uploadedImages.map((img, idx) => (
                     <div
                       key={idx}
-                      className="aspect-square rounded-lg overflow-hidden border border-gray-200"
+                      className="aspect-square rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-purple-500 transition"
+                      onClick={() => setViewingImage(`/api/uploads/${img}`)}
                     >
                       <img
                         src={`/api/uploads/${img}`}
@@ -308,6 +311,15 @@ export default function QuestionnairePage() {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {viewingImage && (
+        <ImageModal
+          imageUrl={viewingImage}
+          altText="Uploaded image"
+          onClose={() => setViewingImage(null)}
+        />
+      )}
     </div>
   )
 }

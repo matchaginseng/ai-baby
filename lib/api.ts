@@ -51,8 +51,8 @@ export const babiesAPI = {
 // Chat endpoints
 export const chatAPI = {
   getHistory: (babyId: number) => api.get(`/chat/${babyId}`),
-  sendMessage: (babyId: number, message: string) =>
-    api.post(`/chat/${babyId}`, { message }),
+  sendMessage: (babyId: number, message: string, stage?: any) =>
+    api.post(`/chat/${babyId}`, { message, stage }),
 }
 
 // Settings endpoints

@@ -6,10 +6,21 @@ from anthropic import Anthropic
 
 chat_bp = Blueprint('chat', __name__)
 
-def get_baby_prompt(baby_name, baby_age, baby_attributes):
+def get_baby_prompt(baby_name, baby_age, baby_attributes, stage=None):
     """Load and format the baby chat prompt"""
     attributes_str = ", ".join(baby_attributes)
-    return f"""You are {baby_name}, a {baby_age} baby with the following traits: {attributes_str}.
+
+    if stage:
+        # Use stage-specific age and description
+        return f"""You are {baby_name} at {stage['age']}. {stage['description']}
+
+Your core traits: {attributes_str}.
+
+Respond as {baby_name} at {stage['age']} would - with appropriate language, personality, and behavior for this age.
+Be genuine, stay in character, and keep responses concise and engaging."""
+    else:
+        # Default prompt
+        return f"""You are {baby_name}, a {baby_age} baby with the following traits: {attributes_str}.
 
 Respond as this baby would - with appropriate language, personality, and behavior for their age and attributes.
 Be playful, genuine, and stay in character. Keep responses concise and engaging."""
@@ -62,6 +73,7 @@ def send_message(baby_id):
     email = get_jwt_identity()
     data = request.json
     user_message = data.get('message')
+    stage = data.get('stage')  # Optional stage parameter
 
     if not user_message:
         return jsonify({'error': 'Message required'}), 400
@@ -121,7 +133,7 @@ def send_message(baby_id):
         history = cursor.fetchall()
 
         # Build messages for Claude
-        system_prompt = get_baby_prompt(baby['name'], baby['age'], baby['attributes'])
+        system_prompt = get_baby_prompt(baby['name'], baby['age'], baby['attributes'], stage)
         messages = [{'role': 'user' if h['role'] == 'user' else 'assistant', 'content': h['message']} for h in history]
 
         # Call Claude API

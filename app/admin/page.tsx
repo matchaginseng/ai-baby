@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 import { questionnaireAPI, babiesAPI, settingsAPI } from '@/lib/api'
+import ImageModal from '../components/ImageModal'
 
 export default function AdminPage() {
   const user = useAuthStore((state) => state.user)
@@ -15,6 +16,7 @@ export default function AdminPage() {
   const [showBabies, setShowBabies] = useState(false)
   const [questionnairesLocked, setQuestionnairesLocked] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [viewingImage, setViewingImage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -175,7 +177,10 @@ export default function AdminPage() {
                   >
                     {/* Baby Image */}
                     {baby.image_path && (
-                      <div className="mb-4 rounded-lg overflow-hidden aspect-square bg-gray-100">
+                      <div
+                        className="mb-4 rounded-lg overflow-hidden aspect-square bg-gray-100 cursor-pointer hover:opacity-90 transition"
+                        onClick={() => setViewingImage(baby.image_path)}
+                      >
                         <img
                           src={baby.image_path}
                           alt={baby.name}
@@ -290,7 +295,8 @@ export default function AdminPage() {
                           {q.image_paths.map((img: string, idx: number) => (
                             <div
                               key={idx}
-                              className="aspect-square rounded-lg overflow-hidden border border-gray-200"
+                              className="aspect-square rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-purple-500 transition"
+                              onClick={() => setViewingImage(`/api/uploads/${img}`)}
                             >
                               <img
                                 src={`/api/uploads/${img}`}
@@ -309,6 +315,15 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      {viewingImage && (
+        <ImageModal
+          imageUrl={viewingImage}
+          altText="Image"
+          onClose={() => setViewingImage(null)}
+        />
+      )}
     </div>
   )
 }

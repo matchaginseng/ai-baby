@@ -58,6 +58,7 @@ def init_db():
                 attributes TEXT[] NOT NULL,
                 image_path VARCHAR(500),
                 is_visible BOOLEAN DEFAULT FALSE,
+                life_stages JSONB DEFAULT '[]',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -99,6 +100,19 @@ def init_db():
             INSERT INTO settings (key, value)
             VALUES ('questionnaires_locked', FALSE)
             ON CONFLICT (key) DO NOTHING
+        ''')
+
+        # Add life_stages column to existing babies table if it doesn't exist
+        cursor.execute('''
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'babies' AND column_name = 'life_stages'
+                ) THEN
+                    ALTER TABLE babies ADD COLUMN life_stages JSONB DEFAULT '[]';
+                END IF;
+            END $$;
         ''')
 
         conn.commit()

@@ -24,6 +24,7 @@ export default function ChatPage() {
   const [limitReached, setLimitReached] = useState(false)
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [baby, setBaby] = useState<any>(null)
+  const [selectedStage, setSelectedStage] = useState<any>(null)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -31,6 +32,12 @@ export default function ChatPage() {
     if (!user) {
       router.push('/login')
       return
+    }
+
+    // Load selected stage from session storage
+    const stageData = sessionStorage.getItem('selectedStage')
+    if (stageData) {
+      setSelectedStage(JSON.parse(stageData))
     }
 
     loadChatHistory()
@@ -70,7 +77,12 @@ export default function ChatPage() {
     setLoading(true)
 
     try {
-      const response = await chatAPI.sendMessage(babyId, userMessage)
+      // Include stage information if available
+      const payload: any = { message: userMessage }
+      if (selectedStage) {
+        payload.stage = selectedStage
+      }
+      const response = await chatAPI.sendMessage(babyId, userMessage, selectedStage)
 
       setMessages((prev) => [
         ...prev,
@@ -119,7 +131,13 @@ export default function ChatPage() {
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
                 Chat with {baby?.name || 'Baby'}
+                {selectedStage && ` at ${selectedStage.age}`}
               </h1>
+              {selectedStage && (
+                <p className="text-sm text-gray-600 mb-1">
+                  {selectedStage.description}
+                </p>
+              )}
               <p className="text-sm text-gray-500">
                 Messages: {messageCount}/20 {limitReached && '(Limit reached)'}
               </p>
