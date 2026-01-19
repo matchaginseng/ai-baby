@@ -11,6 +11,7 @@ export default function AdminPage() {
   const router = useRouter()
 
   const [questionnaires, setQuestionnaires] = useState<any[]>([])
+  const [babies, setBabies] = useState<any[]>([])
   const [showBabies, setShowBabies] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -26,6 +27,7 @@ export default function AdminPage() {
     }
 
     loadQuestionnaires()
+    loadBabies()
   }, [user, router])
 
   const loadQuestionnaires = async () => {
@@ -36,6 +38,15 @@ export default function AdminPage() {
       console.error('Failed to load questionnaires:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadBabies = async () => {
+    try {
+      const response = await babiesAPI.getAll()
+      setBabies(response.data)
+    } catch (err) {
+      console.error('Failed to load babies:', err)
     }
   }
 
@@ -95,6 +106,74 @@ export default function AdminPage() {
                 </span>
               </label>
             </div>
+          </div>
+
+          {/* Babies List */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              All Babies in Database
+            </h2>
+
+            {babies.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl">
+                No babies in database yet
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {babies.map((baby) => (
+                  <div
+                    key={baby.id}
+                    className="border border-gray-200 rounded-xl p-6 hover:shadow-lg transition bg-white"
+                  >
+                    {/* Baby Image */}
+                    {baby.image_path && (
+                      <div className="mb-4 rounded-lg overflow-hidden aspect-square bg-gray-100">
+                        <img
+                          src={baby.image_path}
+                          alt={baby.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {/* Baby Info */}
+                    <h3 className="text-xl font-bold text-gray-800 mb-1">
+                      {baby.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">{baby.age}</p>
+
+                    {/* Attributes */}
+                    <div className="mb-3">
+                      <h4 className="text-xs font-semibold text-gray-700 mb-2">
+                        Attributes:
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
+                        {baby.attributes?.map((attr: string, idx: number) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"
+                          >
+                            {attr}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Visibility Status */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={`w-2 h-2 rounded-full ${
+                          baby.is_visible ? 'bg-green-500' : 'bg-gray-400'
+                        }`}
+                      />
+                      <span className="text-sm text-gray-600">
+                        {baby.is_visible ? 'Visible to users' : 'Hidden from users'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Questionnaires List */}
