@@ -44,5 +44,8 @@ def initialize_database():
     except Exception as e:
         return {"error": str(e)}, 500
 
+# Export for Vercel
+handler = app
+
 if __name__ == '__main__':
     app.run(debug=True)
