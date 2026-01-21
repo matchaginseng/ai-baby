@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 import { questionnaireAPI, babiesAPI, settingsAPI } from '@/lib/api'
 import ImageModal from '../components/ImageModal'
+import ProfileTabs from '@/components/ProfileTabs'
 
 export default function QuestionnairePage() {
   const user = useAuthStore((state) => state.user)
@@ -126,46 +127,26 @@ export default function QuestionnairePage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">Questionnaire</h1>
-            <div className="flex gap-4">
-              {hasSelectedBaby && (
-                <button
-                  onClick={goToBabies}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
-                >
-                  View Babies
-                </button>
-              )}
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      <div className="max-w-4xl mx-auto p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Questionnaire
+          </h1>
+          <button
+            onClick={handleLogout}
+            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
+          >
+            Logout
+          </button>
+        </div>
 
-          {/* Navigation Tabs */}
-          {babiesVisible && (
-            <div className="flex gap-2 mb-6 border-b border-gray-200">
-              <button
-                className="px-6 py-3 text-purple-600 border-b-2 border-purple-600 font-semibold"
-              >
-                Questionnaire
-              </button>
-              <button
-                onClick={() => router.push('/my-babies')}
-                className="px-6 py-3 text-gray-600 hover:text-gray-800 hover:border-b-2 hover:border-purple-500 transition"
-              >
-                My Babies
-              </button>
-            </div>
-          )}
+        {/* Tabs */}
+        <ProfileTabs currentTab="questionnaire" />
 
+        {/* Content */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
           {isLocked && (
             <div className="mb-6 p-4 bg-orange-100 border border-orange-400 text-orange-800 rounded-lg">
               <strong>Questionnaire Locked:</strong> The admin has locked questionnaire editing. You can view your answers but cannot make changes at this time.

@@ -13,7 +13,7 @@ export default function Home() {
       if (user.role === 'admin') {
         router.push('/admin')
       } else {
-        router.push('/questionnaire')
+        router.push('/profile')
       }
     } else {
       router.push('/login')

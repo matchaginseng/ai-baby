@@ -115,5 +115,18 @@ def init_db():
             END $$;
         ''')
 
+        # Add partner column to existing users table if it doesn't exist
+        cursor.execute('''
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'users' AND column_name = 'partner'
+                ) THEN
+                    ALTER TABLE users ADD COLUMN partner VARCHAR(255);
+                END IF;
+            END $$;
+        ''')
+
         conn.commit()
         print("Database tables created successfully!")

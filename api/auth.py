@@ -74,7 +74,7 @@ def get_current_user():
 
     with get_db() as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT id, email, role, selected_baby_id FROM users WHERE email = %s', (email,))
+        cursor.execute('SELECT id, email, role, selected_baby_id, partner FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
 
         if not user:
@@ -84,5 +84,60 @@ def get_current_user():
             'id': user['id'],
             'email': user['email'],
             'role': user['role'],
-            'selected_baby_id': user['selected_baby_id']
+            'selected_baby_id': user['selected_baby_id'],
+            'partner': user['partner']
         }), 200
+
+@auth_bp.route('/change-password', methods=['POST'])
+@jwt_required()
+def change_password():
+    email = get_jwt_identity()
+    data = request.json
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+
+    if not current_password or not new_password:
+        return jsonify({'error': 'Current password and new password required'}), 400
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, password_hash FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        # Verify current password
+        if not check_password_hash(user['password_hash'], current_password):
+            return jsonify({'error': 'Current password is incorrect'}), 401
+
+        # Update to new password
+        new_password_hash = generate_password_hash(new_password)
+        cursor.execute(
+            'UPDATE users SET password_hash = %s WHERE id = %s',
+            (new_password_hash, user['id'])
+        )
+
+        return jsonify({'message': 'Password changed successfully'}), 200
+
+@auth_bp.route('/partner', methods=['POST'])
+@jwt_required()
+def update_partner():
+    email = get_jwt_identity()
+    data = request.json
+    partner = data.get('partner', '')
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
+        cursor.execute(
+            'UPDATE users SET partner = %s WHERE id = %s',
+            (partner, user['id'])
+        )
+
+        return jsonify({'message': 'Partner information updated successfully'}), 200

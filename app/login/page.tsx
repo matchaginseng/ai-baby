@@ -33,7 +33,7 @@ export default function LoginPage() {
       if (role === 'admin') {
         router.push('/admin')
       } else {
-        router.push('/questionnaire')
+        router.push('/profile')
       }
     } catch (err: any) {
       setError(err.response?.data?.error || 'An error occurred')

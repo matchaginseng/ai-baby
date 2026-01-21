@@ -7,6 +7,7 @@ import { babiesAPI } from '@/lib/api'
 import BabyCardStack from '../components/BabyCardStack'
 import LifeStagesModal from '../components/LifeStagesModal'
 import ImageModal from '../components/ImageModal'
+import ProfileTabs from '@/components/ProfileTabs'
 
 interface LifeStage {
   age: string
@@ -90,7 +91,7 @@ export default function BabiesPage() {
   }
 
   const goBack = () => {
-    router.push('/questionnaire')
+    router.push('/profile')
   }
 
   if (!user) return null
@@ -98,18 +99,26 @@ export default function BabiesPage() {
   // If user has already selected a baby, show only that baby with life stages
   if (selectedBaby) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-800">Your Baby</h1>
-              <button
-                onClick={goBack}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-              >
-                Back
-              </button>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
+        <div className="max-w-4xl mx-auto p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Your Baby
+            </h1>
+            <button
+              onClick={goBack}
+              className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
+            >
+              Back
+            </button>
+          </div>
+
+          {/* Tabs */}
+          <ProfileTabs currentTab="babies" />
+
+          {/* Content */}
+          <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
 
             <div className="text-center mb-8">
               <h2 className="text-2xl font-semibold text-gray-700 mb-4">
@@ -220,18 +229,26 @@ export default function BabiesPage() {
 
   // Show card stack if no baby selected yet
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">Meet the Babies</h1>
-            <button
-              onClick={goBack}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-            >
-              Back
-            </button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
+      <div className="max-w-4xl mx-auto p-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Meet the Babies
+          </h1>
+          <button
+            onClick={goBack}
+            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
+          >
+            Back
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <ProfileTabs currentTab="babies" />
+
+        {/* Content */}
+        <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
 
           <div className="mb-6 text-center text-gray-600">
             <p>Swipe left or right to browse babies</p>
@@ -248,6 +265,7 @@ export default function BabiesPage() {
             <BabyCardStack babies={babies} onMeet={handleMeet} onViewImage={setViewingImage} />
           )}
         </div>
+      </div>
       </div>
 
       {/* Life Stages Modal */}
