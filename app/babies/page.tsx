@@ -266,7 +266,6 @@ export default function BabiesPage() {
           )}
         </div>
       </div>
-      </div>
 
       {/* Life Stages Modal */}
       {showModal && modalBaby && (
