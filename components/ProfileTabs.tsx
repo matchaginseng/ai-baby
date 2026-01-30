@@ -16,8 +16,8 @@ export default function ProfileTabs({ currentTab }: ProfileTabsProps) {
   useEffect(() => {
     const checkBabiesVisibility = async () => {
       try {
-        const babies = await babiesAPI.getAll()
-        const anyBabyVisible = babies.some((baby: any) => baby.is_visible !== false)
+        const response = await babiesAPI.getAll()
+        const anyBabyVisible = response.data.some((baby: any) => baby.is_visible !== false)
         setBabiesVisible(anyBabyVisible)
       } catch (error) {
         console.error('Error checking babies visibility:', error)
