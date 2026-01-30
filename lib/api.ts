@@ -31,6 +31,11 @@ export const authAPI = {
   login: (email: string, password: string) =>
     api.post('/auth/login', { email, password }),
   getMe: () => api.get('/auth/me'),
+  getCurrentUser: () => api.get('auth/me'),
+  changePassword: (currentPassword: string, newPassword: string) => 
+    api.post('/auth/change-password', { current_password: currentPassword, new_password: newPassword})
+  ,
+  updatePartner: (partner: string) => api.post('/auth/partner', { partner })
 }
 
 // Questionnaire endpoints
