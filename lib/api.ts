@@ -17,11 +17,7 @@ api.interceptors.request.use((config) => {
   }
   return config
 }, function(error) {
-  if (401 === error.response.status) {
-      console.log(error);
-    } else {
-        return Promise.reject(error);
-    }
+  return Promise.reject(error)
 })
 
 // Auth endpoints

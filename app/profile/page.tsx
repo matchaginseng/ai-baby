@@ -29,8 +29,8 @@ export default function ProfilePage() {
 
     const fetchUserData = async () => {
       try {
-        const userData = await authAPI.getCurrentUser()
-        setPartner(userData.partner || '')
+        const response = await authAPI.getCurrentUser()
+        setPartner(response.data.partner || '')
       } catch (error) {
         console.error('Error fetching user data:', error)
       } finally {
