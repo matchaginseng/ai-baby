@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
-import ProfileTabs from '@/components/ProfileTabs'
+import ProfileTabs from '@/app/components/ProfileTabs'
 import { authAPI } from '@/lib/api'
 
 export default function ProfilePage() {

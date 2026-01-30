@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 import { questionnaireAPI, babiesAPI, settingsAPI } from '@/lib/api'
 import ImageModal from '../components/ImageModal'
-import ProfileTabs from '@/components/ProfileTabs'
+import ProfileTabs from '@/app/components/ProfileTabs'
 
 export default function QuestionnairePage() {
   const user = useAuthStore((state) => state.user)

@@ -7,7 +7,7 @@ import { babiesAPI } from '@/lib/api'
 import BabyCardStack from '../components/BabyCardStack'
 import LifeStagesModal from '../components/LifeStagesModal'
 import ImageModal from '../components/ImageModal'
-import ProfileTabs from '@/components/ProfileTabs'
+import ProfileTabs from '@/app/components/ProfileTabs'
 
 interface LifeStage {
   age: string
