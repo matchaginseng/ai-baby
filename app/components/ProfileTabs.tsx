@@ -55,9 +55,6 @@ export default function ProfileTabs({ currentTab }: ProfileTabsProps) {
             `}
           >
             {tab.label}
-            {tab.disabled && (
-              <span className="ml-2 text-xs">(Disabled)</span>
-            )}
           </button>
         ))}
       </div>
