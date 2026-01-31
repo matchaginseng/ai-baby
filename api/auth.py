@@ -141,3 +141,27 @@ def update_partner():
         )
 
         return jsonify({'message': 'Partner information updated successfully'}), 200
+
+@auth_bp.route('/users', methods=['GET'])
+@jwt_required()
+def get_all_users():
+    """Admin only: Get all users"""
+    email = get_jwt_identity()
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT role FROM users WHERE email = %s', (email,))
+        user = cursor.fetchone()
+
+        if not user or user['role'] != 'admin':
+            return jsonify({'error': 'Unauthorized'}), 403
+
+        cursor.execute('SELECT id, email, role, created_at FROM users ORDER BY created_at DESC')
+        users = cursor.fetchall()
+
+        return jsonify([{
+            'id': u['id'],
+            'email': u['email'],
+            'role': u['role'],
+            'created_at': u['created_at'].isoformat() if u['created_at'] else None
+        } for u in users]), 200

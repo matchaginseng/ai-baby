@@ -128,5 +128,18 @@ def init_db():
             END $$;
         ''')
 
+        # Add user_id column to existing babies table if it doesn't exist
+        cursor.execute('''
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'babies' AND column_name = 'user_id'
+                ) THEN
+                    ALTER TABLE babies ADD COLUMN user_id INTEGER REFERENCES users(id) ON DELETE CASCADE;
+                END IF;
+            END $$;
+        ''')
+
         conn.commit()
         print("Database tables created successfully!")
