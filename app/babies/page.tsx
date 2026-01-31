@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
 import { babiesAPI } from '@/lib/api'
-import BabyCardStack from '../components/BabyCardStack'
 import LifeStagesModal from '../components/LifeStagesModal'
 import ImageModal from '../components/ImageModal'
 import ProfileTabs from '@/app/components/ProfileTabs'
@@ -251,8 +250,7 @@ export default function BabiesPage() {
         <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
 
           <div className="mb-6 text-center text-gray-600">
-            <p>Swipe left or right to browse babies</p>
-            <p className="text-sm">Click "Meet" to see them at different ages</p>
+            <p>Browse available babies and click "Meet" to see them at different ages</p>
           </div>
 
           {loading ? (
@@ -262,7 +260,62 @@ export default function BabiesPage() {
               No babies available yet. Check back later!
             </div>
           ) : (
-            <BabyCardStack babies={babies} onMeet={handleMeet} onViewImage={setViewingImage} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {babies.map((baby) => (
+                <div
+                  key={baby.id}
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden transform transition hover:scale-105 hover:shadow-xl"
+                >
+                  {/* Baby Image */}
+                  <div
+                    className="aspect-[3/4] relative bg-gradient-to-br from-blue-100 to-purple-100 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (baby.image_path) setViewingImage(baby.image_path)
+                    }}
+                  >
+                    {baby.image_path ? (
+                      <img
+                        src={baby.image_path}
+                        alt={baby.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-8xl">
+                        👶
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Baby Info */}
+                  <div className="p-4">
+                    <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                      {baby.name}, {baby.age}
+                    </h3>
+
+                    {/* Attributes */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {baby.attributes.map((attr, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
+                        >
+                          {attr}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Meet Button */}
+                    <button
+                      onClick={() => handleMeet(baby)}
+                      className="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-lg transition"
+                    >
+                      Meet {baby.name}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
