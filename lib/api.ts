@@ -28,10 +28,11 @@ export const authAPI = {
     api.post('/auth/login', { email, password }),
   getMe: () => api.get('/auth/me'),
   getCurrentUser: () => api.get('auth/me'),
-  changePassword: (currentPassword: string, newPassword: string) => 
+  changePassword: (currentPassword: string, newPassword: string) =>
     api.post('/auth/change-password', { current_password: currentPassword, new_password: newPassword})
   ,
-  updatePartner: (partner: string) => api.post('/auth/partner', { partner })
+  updatePartner: (partner: string) => api.post('/auth/partner', { partner }),
+  getAllUsers: () => api.get('/auth/users'),
 }
 
 // Questionnaire endpoints
@@ -54,6 +55,8 @@ export const babiesAPI = {
   select: (baby_id: number) => api.post('/babies/selected', { baby_id }),
   getSelected: () => api.get('/babies/selected'),
   create: (data: any) => api.post('/babies', data),
+  assignToUser: (baby_id: number, user_id: number) =>
+    api.post(`/babies/${baby_id}/assign`, { baby_id, user_id }),
 }
 
 // Chat endpoints
