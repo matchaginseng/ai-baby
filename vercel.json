@@ -1,12 +1,39 @@
 {
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     {
-      "source": "/api/:path((?!index).*)",
+      "source": "/api/auth/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/questionnaire/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/questionnaires/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/babies/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/chat/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/settings/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/uploads/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/health",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api/init-db",
       "destination": "/api/index"
     }
   ]
