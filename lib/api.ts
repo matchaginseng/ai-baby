@@ -8,11 +8,14 @@ export const api = axios.create({
 
 // Add token to requests
 api.interceptors.request.use((config) => {
-  const storage = localStorage.getItem('auth-storage')
-  if (storage) {
-    const { state } = JSON.parse(storage)
-    if (state?.user?.token) {
-      config.headers.Authorization = `Bearer ${state.user.token}`
+  // Only access localStorage in the browser (not during SSR)
+  if (typeof window !== 'undefined') {
+    const storage = localStorage.getItem('auth-storage')
+    if (storage) {
+      const { state } = JSON.parse(storage)
+      if (state?.user?.token) {
+        config.headers.Authorization = `Bearer ${state.user.token}`
+      }
     }
   }
   return config
