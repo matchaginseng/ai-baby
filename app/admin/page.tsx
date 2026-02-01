@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store'
-import { questionnaireAPI, babiesAPI, settingsAPI } from '@/lib/api'
+import { questionnaireAPI, babiesAPI, settingsAPI, authAPI } from '@/lib/api'
 import ImageModal from '../components/ImageModal'
 
 export default function AdminPage() {
@@ -13,10 +13,12 @@ export default function AdminPage() {
 
   const [questionnaires, setQuestionnaires] = useState<any[]>([])
   const [babies, setBabies] = useState<any[]>([])
+  const [users, setUsers] = useState<any[]>([])
   const [showBabies, setShowBabies] = useState(false)
   const [questionnairesLocked, setQuestionnairesLocked] = useState(false)
   const [loading, setLoading] = useState(true)
   const [viewingImage, setViewingImage] = useState<string | null>(null)
+  const [assigningBaby, setAssigningBaby] = useState<number | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -32,7 +34,17 @@ export default function AdminPage() {
     loadQuestionnaires()
     loadBabies()
     loadSettings()
+    loadUsers()
   }, [user, router])
+
+  const loadUsers = async () => {
+    try {
+      const response = await authAPI.getAllUsers()
+      setUsers(response.data)
+    } catch (err) {
+      console.error('Failed to load users:', err)
+    }
+  }
 
   const loadQuestionnaires = async () => {
     try {
@@ -88,9 +100,30 @@ export default function AdminPage() {
     }
   }
 
+  const handleAssignBaby = async (babyId: number, userId: number | null) => {
+    if (userId === null) return
+
+    try {
+      await babiesAPI.assignToUser(babyId, userId)
+      // Reload babies to reflect the changes
+      await loadBabies()
+      setAssigningBaby(null)
+      alert('Baby assigned successfully!')
+    } catch (err) {
+      console.error('Failed to assign baby:', err)
+      alert('Failed to assign baby to user')
+    }
+  }
+
   const handleLogout = () => {
     logout()
     router.push('/login')
+  }
+
+  const getUserEmail = (userId: number | null) => {
+    if (!userId) return 'Unassigned'
+    const foundUser = users.find(u => u.id === userId)
+    return foundUser ? foundUser.email : 'Unknown User'
   }
 
   if (!user || user.role !== 'admin') return null
@@ -216,7 +249,7 @@ export default function AdminPage() {
                     </div>
 
                     {/* Visibility Status */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mb-3">
                       <div
                         className={`w-2 h-2 rounded-full ${
                           baby.is_visible ? 'bg-green-500' : 'bg-gray-400'
@@ -225,6 +258,49 @@ export default function AdminPage() {
                       <span className="text-sm text-gray-600">
                         {baby.is_visible ? 'Visible to users' : 'Hidden from users'}
                       </span>
+                    </div>
+
+                    {/* User Assignment */}
+                    <div className="pt-3 border-t border-gray-200">
+                      <h4 className="text-xs font-semibold text-gray-700 mb-2">
+                        Assigned to:
+                      </h4>
+                      <div className="text-sm text-gray-600 mb-2">
+                        {getUserEmail(baby.user_id)}
+                      </div>
+
+                      {assigningBaby === baby.id ? (
+                        <div className="space-y-2">
+                          <select
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            onChange={(e) => {
+                              const userId = e.target.value ? parseInt(e.target.value) : null
+                              handleAssignBaby(baby.id, userId)
+                            }}
+                            defaultValue={baby.user_id || ''}
+                          >
+                            <option value="">Select a user...</option>
+                            {users.filter(u => u.role !== 'admin').map((u) => (
+                              <option key={u.id} value={u.id}>
+                                {u.email}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => setAssigningBaby(null)}
+                            className="w-full px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setAssigningBaby(baby.id)}
+                          className="w-full px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition text-sm font-medium"
+                        >
+                          {baby.user_id ? 'Reassign' : 'Assign to User'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
