@@ -1,6 +1,6 @@
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from api.config import Config
+from .config import Config
 from contextlib import contextmanager
 
 def get_db_connection():

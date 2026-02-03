@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from api.database import get_db
+from .database import get_db
 
 settings_bp = Blueprint('settings', __name__)
 

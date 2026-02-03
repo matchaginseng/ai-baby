@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from api.database import get_db
-from api.config import Config
+from .database import get_db
+from .config import Config
 from anthropic import Anthropic
 
 chat_bp = Blueprint('chat', __name__)

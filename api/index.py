@@ -1,13 +1,13 @@
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from api.config import Config
-from api.database import init_db
-from api.auth import auth_bp
-from api.questionnaire import questionnaire_bp
-from api.babies import babies_bp
-from api.chat import chat_bp
-from api.settings import settings_bp
+from .config import Config
+from .database import init_db
+from .auth import auth_bp
+from .questionnaire import questionnaire_bp
+from .babies import babies_bp
+from .chat import chat_bp
+from .settings import settings_bp
 import os
 
 app = Flask(__name__)
