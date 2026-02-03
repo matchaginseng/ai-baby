@@ -1,0 +1,8 @@
+# Backend is deployed on Railway
+api/
+requirements.txt
+Dockerfile
+Procfile
+railway.json
+nixpacks.toml
+runtime.txt
