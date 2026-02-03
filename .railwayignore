@@ -1,0 +1,16 @@
+# Frontend files (deployed to Vercel)
+app/
+public/
+node_modules/
+.next/
+
+# Config files for frontend
+next.config.js
+tailwind.config.js
+postcss.config.js
+tsconfig.json
+vercel.json
+
+# Development files
+*.log
+.DS_Store
